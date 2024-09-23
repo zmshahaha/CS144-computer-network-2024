@@ -10,10 +10,9 @@ using namespace std;
 void get_URL( const string& host, const string& path )
 {
   TCPSocket socket;
-  Address server(host, "http");
   string request, reply;
 
-  socket.connect(server);
+  socket.connect(Address(host, "http"));
 
   request = "GET " + path + " HTTP/1.1\r\n"
             "Host: " + host + "\r\n"
