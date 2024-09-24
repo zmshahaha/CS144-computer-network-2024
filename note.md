@@ -1,4 +1,4 @@
-## lab1
+## lab0
 
 queue不支持容器遍历(不支持begin，end)，所以使用deque
 
@@ -8,7 +8,7 @@ string_view Reader::peek() const返回值为string_view则返回的必须是全�
 
 string_view Reader::peek() const 中的const表示对类的每一个成员都是const，根据编译时的提示
 
-## lab2
+## lab1
 
 auto &iter = buffer_.begin()语法是错误的，不能加&，因为buffer_.begin()是右值，不能赋给引用
 
@@ -56,3 +56,9 @@ cout<<&_reader<<" "<<&_reader2<<endl;
 ```
 
 此时发现reader地址正常
+
+## lab2
+
+1 << 31 UL错，1UL << 31对
+
+unwrap的当前seqno是调用者自己
