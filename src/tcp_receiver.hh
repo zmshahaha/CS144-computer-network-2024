@@ -27,4 +27,9 @@ public:
 
 private:
   Reassembler reassembler_;
+  Wrap32 isn_ {0}; // initial seq number
+  uint64_t last_asn_ {}; // used for unwrap
+  uint64_t stream_len_ {}; // exclude SYN/FIN, set when FIN recved
+  bool syn_recved_ {false};
+  bool fin_recved_ {false};
 };
