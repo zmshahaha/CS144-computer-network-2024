@@ -125,7 +125,6 @@ void NetworkInterface::tick( const size_t ms_since_last_tick )
 {
   // Your code here.
   for (auto cache = arp_cache_.begin(); cache != arp_cache_.end(); ) {
-    cout<<"reserve "<<cache->second.reserve_ms<<endl;
     if (cache->second.reserve_ms <= ms_since_last_tick) {
       cache = arp_cache_.erase(cache);
     } else {
