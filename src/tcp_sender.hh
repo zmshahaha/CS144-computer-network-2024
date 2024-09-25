@@ -46,6 +46,13 @@ public:
 private:
   // Variables initialized in constructor
   ByteStream input_;
+  std::queue<TCPSenderMessage> in_flight_msg_ {};
   Wrap32 isn_;
   uint64_t initial_RTO_ms_;
+  uint64_t next_send_asn_ {};
+  uint64_t next_ack_asn_ {};
+  uint64_t window_size_ {};
+  uint64_t last_retx_ms_ {};
+  uint64_t consecutive_retx_ {};
+  bool end_ {};
 };

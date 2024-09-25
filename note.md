@@ -62,3 +62,17 @@ cout<<&_reader<<" "<<&_reader2<<endl;
 1 << 31 UL错，1UL << 31对
 
 unwrap的当前seqno是调用者自己
+
+## lab3
+
+连续重传不确定是啥意思，这里取timeout时连续几次有重传的消息。
+
+在这个sender模型中，每个位置的消息只会构造一次，之后发这个位置只会通过in flight buf，所以push的时候FIN直接取内部data是否完成而不用管发的是那个位置的(不会重复构造之前报文)。
+
+If the window size is nonzero才会倍增重传时间，zero时应该是想及时看到它window变大
+
+![alt text](images/win_non_zero.png.png)
+
+这里出现错误ACK没有RST，testcase这样设定的
+
+为什么要在新的ack接收才重新计时timer???
