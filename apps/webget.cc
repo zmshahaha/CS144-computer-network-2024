@@ -5,11 +5,13 @@
 #include <span>
 #include <string>
 
+#include "tcp_minnow_socket.hh" 
+
 using namespace std;
 
 void get_URL( const string& host, const string& path )
 {
-  TCPSocket socket;
+  CS144TCPSocket socket;
   string request, reply;
 
   socket.connect(Address(host, "http"));

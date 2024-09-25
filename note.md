@@ -76,3 +76,7 @@ If the window size is nonzero才会倍增重传时间，zero时应该是想及�
 这里出现错误ACK没有RST，testcase这样设定的
 
 为什么要在新的ack接收才重新计时timer???
+
+## lab4
+
+需要研究下minnow的util是怎么支持socket操作的
