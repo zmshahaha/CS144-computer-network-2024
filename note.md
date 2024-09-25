@@ -80,3 +80,100 @@ If the window size is nonzero才会倍增重传时间，zero时应该是想及�
 ## lab4
 
 需要研究下minnow的util是怎么支持socket操作的
+
+## lab5
+
+arp学习是从arp报文(不管是req还是reply)的发送方信息学习的
+
+arp只会回复目标IP是本机的请求，不会回复目标IP只是在arp cache的请求
+
+set/map的key必须是可比大小的，不然编译报错，不可比用unordered
+
+unordered需要提供哈希函数
+
+这里以下两个的键是相同，都是nexthop的ip，导致两个必须同时变化，引入依赖，可能需要优化
+
+```c++
+  std::multimap<uint32_t, InternetDatagram> datagrams_wait_for_arp_ {};
+  std::map<uint32_t, size_t> arp_resend_table_ {};
+```
+```c++
+//! \param[in] frame the incoming Ethernet frame
+void NetworkInterface::recv_frame( const EthernetFrame& frame )
+{
+  // Your code here.
+  InternetDatagram dgram;
+  ARPMessage arp_msg;
+  EthernetFrame arp_reply_frame, resend_frame;
+  ARPMessage arp_reply_msg;
+
+  // ignore frame not send for us
+  if ((frame.header.dst != ethernet_address_) && (frame.header.dst != ETHERNET_BROADCAST)) {
+    return;
+  }
+
+  if (frame.header.type == EthernetHeader::TYPE_IPv4) {
+    if (parse(dgram, frame.payload) == true) {
+      datagrams_received_.push(move(dgram));
+    }
+  } else if (frame.header.type == EthernetHeader::TYPE_ARP) {
+    if (parse(arp_msg, frame.payload) == true) {
+      // learn the map
+      arp_cache_[arp_msg.sender_ip_address] = {arp_msg.sender_ethernet_address, ARP_CACHE_RESERVE_TIME};
+
+      // learn a map, and send prev dgram
+      auto resend_frames = datagrams_wait_for_arp_.equal_range(arp_msg.sender_ip_address);
+      // 注意这里如果写成auto &msg = resend_frames.first，则会导致resend_frames.first会跟着变化
+      // 直至msg = resend_frames.first = resend_frames.second。导致后面erase失效
+      for (auto msg = resend_frames.first; msg != resend_frames.second; msg++) {
+        resend_frame.header.dst = arp_msg.sender_ethernet_address;  // next hop's mac 
+        resend_frame.header.src = ethernet_address_;
+        resend_frame.header.type = EthernetHeader::TYPE_IPv4;
+        resend_frame.payload = move(serialize(msg->second));
+        transmit(resend_frame);
+      }
+      // remove dgram
+      datagrams_wait_for_arp_.erase(resend_frames.first, resend_frames.second);
+      // remove form arp resend table
+      arp_resend_table_.erase(arp_msg.sender_ip_address);
+
+      if ((arp_msg.opcode == ARPMessage::OPCODE_REQUEST) &&
+          (arp_msg.target_ip_address == ip_address_.ipv4_numeric())) {
+        arp_reply_msg.opcode = ARPMessage::OPCODE_REPLY;
+        arp_reply_msg.sender_ethernet_address = ethernet_address_;
+        arp_reply_msg.sender_ip_address = ip_address_.ipv4_numeric();
+        arp_reply_msg.target_ethernet_address = arp_msg.sender_ethernet_address;
+        arp_reply_msg.target_ip_address = arp_msg.sender_ip_address;
+        arp_reply_frame.header.dst = arp_msg.sender_ethernet_address;
+        arp_reply_frame.header.src = ethernet_address_;
+        arp_reply_frame.header.type = EthernetHeader::TYPE_ARP;
+        arp_reply_frame.payload = move(serialize(move(arp_reply_msg)));
+        transmit(move(arp_reply_frame));
+      }
+    }
+  }
+}
+
+//! \param[in] ms_since_last_tick the number of milliseconds since the last call to this method
+void NetworkInterface::tick( const size_t ms_since_last_tick )
+{
+  // Your code here.
+  for (auto cache = arp_cache_.begin(); cache != arp_cache_.end(); ) {
+    if (cache->second.reserve_ms <= ms_since_last_tick) {
+      cache = arp_cache_.erase(cache);
+    } else {
+      cache->second.reserve_ms -= ms_since_last_tick;
+      cache++;
+    }
+  }
+
+  // 这里的auto后面一定要加&，否则不是改本身
+  for (auto &arp_resend_info : arp_resend_table_) {
+    if (arp_resend_info.second <= ms_since_last_tick) {
+      arp_resend_info.second = 0;
+    } else {
+      arp_resend_info.second -= ms_since_last_tick;
+    }
+  }
+}
+```

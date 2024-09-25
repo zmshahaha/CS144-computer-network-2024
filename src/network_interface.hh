@@ -1,6 +1,7 @@
 #pragma once
 
 #include <queue>
+#include <map>
 
 #include "address.hh"
 #include "ethernet_frame.hh"
@@ -81,4 +82,17 @@ private:
 
   // Datagrams that have been received
   std::queue<InternetDatagram> datagrams_received_ {};
+
+  typedef struct ArpCacheVal {
+    EthernetAddress eth_addr_cache_ {};
+    // tick()'s param is size_t
+    size_t reserve_ms {};
+  } ArpCacheVal;
+
+  // arp cache
+  std::map<uint32_t, ArpCacheVal> arp_cache_ {};
+
+  // datagram to be sent after arp reply received
+  std::multimap<uint32_t, InternetDatagram> datagrams_wait_for_arp_ {};
+  std::map<uint32_t, size_t> arp_resend_table_ {};
 };
