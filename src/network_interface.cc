@@ -36,6 +36,11 @@ void NetworkInterface::send_datagram( const InternetDatagram& dgram, const Addre
 
   eth_frame.header.src = ethernet_address_;
 
+  if (dgram.header.ttl == 0) {
+    // drop
+    return;
+  }
+
   // cached
   if (arp_cache_.count(next_hop.ipv4_numeric())) {
     eth_frame.header.dst = arp_cache_[next_hop.ipv4_numeric()].eth_addr_cache_;

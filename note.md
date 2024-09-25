@@ -177,3 +177,7 @@ void NetworkInterface::tick( const size_t ms_since_last_tick )
   }
 }
 ```
+
+## lab6
+
+Address::from_ipv4_numeric的函数定义是static，所以可以不用Address对象来调用这个
