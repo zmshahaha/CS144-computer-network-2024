@@ -182,6 +182,12 @@ void NetworkInterface::tick( const size_t ms_since_last_tick )
 
 Address::from_ipv4_numeric的函数定义是static，所以可以不用Address对象来调用这个
 
+route对所有收到的包都进行转发，这里应该是没有考虑包发给自己情况，看测试也没测到包目的是某个路由器
+
+next_hop是空的是说直接向目标IP转发，不是说转发给自己
+
+route主要是在不同的网络接口转发数据包，IP层不用变，只是mac层会变
+
 ## minnow
 
 ### TUN设备创建
