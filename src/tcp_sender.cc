@@ -122,12 +122,23 @@ void TCPSender::receive( const TCPReceiverMessage& msg )
       break;
     }
   }
+
+  if (sequence_numbers_in_flight() == 0) {
+    if (in_flight_msg_.size() != 0) {
+      throw runtime_error("seq_in_flight and in_flight_msg are inconsistent");
+    }
+    last_retx_ms_ = 0;
+  }
   consecutive_retx_ = 0;
 }
 
 void TCPSender::tick( uint64_t ms_since_last_tick, const TransmitFunction& transmit )
 {
-  last_retx_ms_ += ms_since_last_tick;
+  if (sequence_numbers_in_flight() != 0) {
+    last_retx_ms_ += ms_since_last_tick;
+  } else {
+    last_retx_ms_ = 0;
+  }
 
   if (last_retx_ms_ >= initial_RTO_ms_ << consecutive_retx_) {
     last_retx_ms_ = 0;
